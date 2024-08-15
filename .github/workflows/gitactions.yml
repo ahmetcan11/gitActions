@@ -1,0 +1,53 @@
+name: Run Tests
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs nightly at midnight
+  workflow_dispatch:
+    inputs:
+      testType:
+        description: 'Select the type of test to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - notInTestDataTest
+          - inTestDataTest
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest # Ensure pytest is installed
+          pip install selenium
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Run tests
+        env:
+          DISPLAY: ":99.0"  # Set display environment variable for headless
+        run: |
+          if [ "${{ github.event_name }}" == "schedule" ] || [ "${{ github.event.inputs.testType }}" == "full" ]; then
+            echo "Running full test suite..."
+            pytest PageFactoryTest/tests/test_google_finance.py
+          elif [ "${{ github.event.inputs.testType }}" == "test_notInTestDataTest" ]; then
+            echo "Running test_notInTestDataTest..."
+            pytest PageFactoryTest/tests/test_google_finance.py
+          elif [ "${{ github.event.inputs.testType }}" == "test_inTestDataTest" ]; then
+            echo "Running test_inTestDataTest..."
+            pytest PageFactoryTest/tests/test_google_finance.py
+          fi
