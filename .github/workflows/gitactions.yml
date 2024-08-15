@@ -31,6 +31,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest # Ensure pytest is installed
           pip install selenium
+          pip install selenium-page-factory
 
       - name: Install Chrome
         run: |
